@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🃏 Poker Trainer</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',sans-serif;background:#0a2010;color:#e8f5e9;min-height:100vh}
+  header{background:linear-gradient(135deg,#1b5e20,#2e7d32);padding:16px 24px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px #0005}
+  header h1{font-size:1.6rem;font-weight:700;letter-spacing:1px}
+  header span{font-size:2rem}
+  nav{display:flex;gap:8px;padding:12px 24px;background:#1a3a20;flex-wrap:wrap}
+  nav button{background:#2e7d32;color:#fff;border:none;padding:9px 18px;border-radius:6px;cursor:pointer;font-size:.9rem;font-weight:600;transition:all .2s}
+  nav button:hover{background:#43a047}
+  nav button.active{background:#f9a825;color:#1a1a1a}
+  .tab{display:none;padding:24px;max-width:1100px;margin:0 auto}
+  .tab.active{display:block}
+  h2{font-size:1.3rem;margin-bottom:16px;color:#a5d6a7}
+  .card{background:#1b3a22;border-radius:10px;padding:20px;margin-bottom:18px;box-shadow:0 2px 8px #0004}
+  .hand-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:16px}
+  .playing-card{width:60px;height:84px;background:#fff;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:3px solid transparent;transition:all .2s;box-shadow:0 2px 6px #0006;user-select:none}
+  .playing-card.red{color:#c62828}
+  .playing-card.black{color:#111}
+  .playing-card:hover{transform:translateY(-4px);border-color:#f9a825}
+  .playing-card.selected{border-color:#f9a825;background:#fffde7;transform:translateY(-6px)}
+  .playing-card .rank{font-size:1.3rem;font-weight:700;line-height:1}
+  .playing-card .suit{font-size:1.2rem;line-height:1}
+  .result-box{background:#0d2b14;border-radius:8px;padding:16px;text-align:center;font-size:1.2rem;font-weight:700;min-height:56px;color:#66bb6a;border:1px solid #2e7d32}
+  .btn{background:#2e7d32;color:#fff;border:none;padding:10px 22px;border-radius:7px;cursor:pointer;font-size:.95rem;font-weight:600;margin:6px 4px;transition:all .2s}
+  .btn:hover{background:#43a047;transform:translateY(-1px)}
+  .btn.danger{background:#c62828}
+  .btn.danger:hover{background:#e53935}
+  .btn.gold{background:#f9a825;color:#1a1a1a}
+  .btn.gold:hover{background:#ffb300}
+  .section-label{font-size:.82rem;color:#81c784;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+  .selected-display{display:flex;flex-wrap:wrap;gap:8px;min-height:54px;padding:10px;background:#0d2b14;border-radius:8px;margin-bottom:12px;align-items:center}
+  .mini-card{background:#fff;border-radius:5px;padding:3px 8px;font-size:1rem;font-weight:700;display:inline-flex;gap:2px;align-items:center;cursor:pointer}
+  .mini-card.red{color:#c62828}
+  .mini-card.black{color:#111}
+  label{font-size:.9rem;color:#a5d6a7;display:block;margin-bottom:4px}
+  input[type=number],input[type=text],select{background:#0d2b14;color:#e8f5e9;border:1px solid #2e7d32;border-radius:6px;padding:8px 12px;font-size:.95rem;width:100%}
+  input[type=number]:focus,select:focus{outline:2px solid #43a047}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr}}
+  .stat-box{background:#0d2b14;border-radius:8px;padding:14px;text-align:center}
+  .stat-box .num{font-size:2rem;font-weight:700;color:#66bb6a}
+  .stat-box .lbl{font-size:.8rem;color:#81c784;margin-top:4px}
+  .progress-bar{height:12px;background:#0d2b14;border-radius:6px;overflow:hidden;margin-top:6px}
+  .progress-fill{height:100%;background:linear-gradient(90deg,#2e7d32,#66bb6a);border-radius:6px;transition:width .4s}
+  .quiz-option{background:#1b3a22;border:2px solid #2e7d32;border-radius:8px;padding:13px 18px;cursor:pointer;margin-bottom:9px;font-size:.95rem;transition:all .2s;display:block;width:100%;text-align:left;color:#e8f5e9}
+  .quiz-option:hover{background:#2e7d32;border-color:#43a047}
+  .quiz-option.correct{background:#1b5e20;border-color:#66bb6a;color:#a5d6a7}
+  .quiz-option.wrong{background:#3e0000;border-color:#c62828;color:#ef9a9a}
+  .feedback{padding:12px;border-radius:8px;margin-top:12px;font-size:.95rem;min-height:44px}
+  .feedback.good{background:#1b5e20;color:#a5d6a7}
+  .feedback.bad{background:#3e0000;color:#ef9a9a}
+  .table-display{background:radial-gradient(ellipse at center,#1b5e20 60%,#0d3b14);border-radius:50%;width:420px;height:230px;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;position:relative;border:8px solid #6d4c41;box-shadow:0 4px 24px #0008}
+  @media(max-width:500px){.table-display{width:290px;height:165px}}
+  .pos-seat{position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .pos-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;cursor:pointer;border:3px solid transparent;transition:all .2s}
+  .pos-dot:hover{transform:scale(1.15)}
+  .pos-dot.active{border-color:#f9a825;box-shadow:0 0 10px #f9a82580}
+  .pos-lbl{font-size:.65rem;color:#a5d6a7;text-align:center}
+  .info-panel{background:#0d2b14;border-radius:8px;padding:14px;font-size:.9rem;line-height:1.6}
+  .info-panel strong{color:#66bb6a}
+  .range-grid{display:grid;grid-template-columns:repeat(13,1fr);gap:2px;max-width:420px;margin:10px auto}
+  .range-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:700;border-radius:3px;cursor:pointer;user-select:none;transition:background .15s}
+  .range-cell.pair{background:#1565c0}
+  .range-cell.suited{background:#1b5e20}
+  .range-cell.offsuit{background:#37474f}
+  .range-cell.selected-range{background:#f9a825!important;color:#1a1a1a}
+  .chip{display:inline-block;background:#ffd54f;color:#1a1a1a;border-radius:20px;padding:3px 10px;font-size:.8rem;font-weight:700;margin:2px;border:2px solid #f9a825}
+  .chip.red{background:#ef9a9a;border-color:#c62828;color:#3e0000}
+  .chip.blue{background:#90caf9;border-color:#1565c0;color:#0d1b3e}
+  .hand-rank-list{list-style:none;counter-reset:rank}
+  .hand-rank-list li{counter-increment:rank;display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid #1b3a22}
+  .hand-rank-list li::before{content:counter(rank);background:#2e7d32;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0}
+  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.78rem;font-weight:700;margin-left:auto}
+  .badge.legendary{background:#f9a825;color:#1a1a1a}
+  .badge.rare{background:#1565c0;color:#fff}
+  .badge.uncommon{background:#2e7d32;color:#fff}
+  .badge.common{background:#546e7a;color:#fff}
+  #pot-odds-result{font-size:1.1rem;padding:14px;background:#0d2b14;border-radius:8px;margin-top:12px;min-height:50px}
+  .odds-good{color:#66bb6a}
+  .odds-bad{color:#ef9a9a}
+  .outs-table{width:100%;border-collapse:collapse;font-size:.88rem}
+  .outs-table th{background:#1b5e20;padding:7px 10px;text-align:left}
+  .outs-table td{padding:7px 10px;border-bottom:1px solid #1b3a22}
+  .outs-table tr:hover td{background:#1b3a22}
+  .scenario-cards{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+  .scenario-card{width:45px;height:63px;background:#fff;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;box-shadow:0 2px 5px #0005}
+  .scenario-card.red{color:#c62828}
+  .scenario-card.black{color:#111}
+  .scenario-card.back{background:#1565c0;border:none}
+  .scenario-sep{color:#a5d6a7;font-weight:700;padding:0 4px}
+  .scroll-x{overflow-x:auto}
+  footer{text-align:center;padding:16px;color:#4caf50;font-size:.8rem;margin-top:20px}
+</style>
+</head>
+<body>
+<header><span>🃏</span><h1>Poker Trainer — Texas Hold'em</h1></header>
+<nav>
+  <button class="active" onclick="showTab('evaluator',this)">Hand Evaluator</button>
+  <button onclick="showTab('potodds',this)">Pot Odds</button>
+  <button onclick="showTab('positions',this)">Positions</button>
+  <button onclick="showTab('ranges',this)">Starting Hands</button>
+  <button onclick="showTab('quiz',this)">Quiz</button>
+  <button onclick="showTab('rules',this)">Hand Rankings</button>
+</nav>
+
+<!-- ===== HAND EVALUATOR ===== -->
+<div id="tab-evaluator" class="tab active">
+  <h2>Hand Evaluator</h2>
+  <div class="card">
+    <p style="color:#81c784;margin-bottom:14px;font-size:.9rem">Select 2 hole cards + up to 5 community cards (7 total), then evaluate your best 5-card hand.</p>
+    <div class="grid2">
+      <div>
+        <div class="section-label">Your Hole Cards (pick 2)</div>
+        <div id="hole-display" class="selected-display"><span style="color:#4caf50;font-size:.85rem">None selected</span></div>
+        <div class="section-label" style="margin-top:10px">Community Cards (pick up to 5)</div>
+        <div id="community-display" class="selected-display"><span style="color:#4caf50;font-size:.85rem">None selected</span></div>
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">
+          <button class="btn gold" onclick="evaluateHand()">Evaluate Hand</button>
+          <button class="btn danger" onclick="clearEval()">Clear All</button>
+        </div>
+        <div id="eval-result" class="result-box" style="margin-top:12px">Select cards above to evaluate your hand.</div>
+      </div>
+      <div>
+        <div class="section-label">Card Picker — Click to select</div>
+        <div id="card-picker"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== POT ODDS ===== -->
+<div id="tab-potodds" class="tab">
+  <h2>Pot Odds Calculator</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3 style="color:#a5d6a7;margin-bottom:14px">Pot Odds</h3>
+      <div style="margin-bottom:10px"><label>Pot Size ($)</label><input type="number" id="pot-size" value="100" min="0"></div>
+      <div style="margin-bottom:10px"><label>Bet to Call ($)</label><input type="number" id="bet-call" value="30" min="0"></div>
+      <div style="margin-bottom:10px"><label>Your Outs (cards that improve your hand)</label><input type="number" id="outs" value="9" min="0" max="47"></div>
+      <div style="margin-bottom:10px"><label>Cards to Come</label>
+        <select id="cards-to-come"><option value="1">1 (River)</option><option value="2" selected>2 (Turn+River)</option></select>
+      </div>
+      <button class="btn gold" onclick="calcPotOdds()">Calculate</button>
+      <div id="pot-odds-result">Fill in the fields and click Calculate.</div>
+    </div>
+    <div class="card">
+      <h3 style="color:#a5d6a7;margin-bottom:14px">Common Outs Reference</h3>
+      <div class="scroll-x"><table class="outs-table">
+        <tr><th>Draw Type</th><th>Outs</th><th>~Flop→River%</th></tr>
+        <tr><td>Flush draw</td><td>9</td><td>35%</td></tr>
+        <tr><td>Open-ended straight</td><td>8</td><td>31%</td></tr>
+        <tr><td>Two overcards</td><td>6</td><td>24%</td></tr>
+        <tr><td>Gutshot straight</td><td>4</td><td>17%</td></tr>
+        <tr><td>One overcard</td><td>3</td><td>13%</td></tr>
+        <tr><td>Set → full house/quads</td><td>7</td><td>28%</td></tr>
+        <tr><td>Flush+straight draw</td><td>15</td><td>54%</td></tr>
+        <tr><td>Two pair → full house</td><td>4</td><td>17%</td></tr>
+      </table></div>
+      <p style="color:#81c784;font-size:.82rem;margin-top:10px">Rule of 4 & 2: multiply outs × 4 (two cards to come) or × 2 (one card to come) for a quick % estimate.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== POSITIONS ===== -->
+<div id="tab-positions" class="tab">
+  <h2>Table Positions</h2>
+  <div class="card">
+    <div class="grid2">
+      <div>
+        <p style="color:#81c784;margin-bottom:14px;font-size:.9rem">Click a seat to learn about that position's strategy.</p>
+        <div class="table-display" id="poker-table"></div>
+      </div>
+      <div>
+        <div class="info-panel" id="pos-info">
+          <strong>Click any position on the table</strong> to learn its strategic importance in Texas Hold'em.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RANGES ===== -->
+<div id="tab-ranges" class="tab">
+  <h2>Starting Hand Chart</h2>
+  <div class="card">
+    <p style="color:#81c784;margin-bottom:12px;font-size:.9rem">Colour-coded starting hand grid. Click hands to mark them as part of your range. <span class="chip">Pairs</span><span class="chip blue">Suited</span><span class="chip red">Offsuit</span></p>
+    <div style="margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <button class="btn" onclick="setPreset('tight')">Tight Range (Top 15%)</button>
+      <button class="btn" onclick="setPreset('medium')">Medium Range (Top 25%)</button>
+      <button class="btn" onclick="setPreset('loose')">Loose Range (Top 40%)</button>
+      <button class="btn danger" onclick="clearRange()">Clear</button>
+    </div>
+    <div id="range-grid" class="range-grid"></div>
+    <p style="color:#a5d6a7;margin-top:10px;font-size:.85rem" id="range-count">0 hands selected</p>
+  </div>
+</div>
+
+<!-- ===== QUIZ ===== -->
+<div id="tab-quiz" class="tab">
+  <h2>Poker Quiz</h2>
+  <div class="grid2">
+    <div>
+      <div class="card" id="quiz-box">
+        <div id="quiz-scenario" style="margin-bottom:14px"></div>
+        <div id="quiz-options"></div>
+        <div id="quiz-feedback" class="feedback" style="display:none"></div>
+        <div style="margin-top:14px"><button class="btn gold" onclick="nextQuestion()">Next Question ▶</button></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="color:#a5d6a7;margin-bottom:14px">Your Stats</h3>
+        <div class="grid2">
+          <div class="stat-box"><div class="num" id="stat-correct">0</div><div class="lbl">Correct</div></div>
+          <div class="stat-box"><div class="num" id="stat-total">0</div><div class="lbl">Total</div></div>
+        </div>
+        <div style="margin-top:14px">
+          <div class="section-label">Accuracy</div>
+          <div class="progress-bar"><div class="progress-fill" id="stat-bar" style="width:0%"></div></div>
+          <div style="text-align:center;margin-top:6px;font-size:.9rem" id="stat-pct">0%</div>
+        </div>
+        <button class="btn danger" style="margin-top:14px" onclick="resetStats()">Reset Stats</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RULES ===== -->
+<div id="tab-rules" class="tab">
+  <h2>Hand Rankings</h2>
+  <div class="card">
+    <p style="color:#81c784;margin-bottom:14px;font-size:.9rem">Highest to lowest — best 5-card hand wins.</p>
+    <ul class="hand-rank-list" id="hand-rankings"></ul>
+  </div>
+</div>
+
+<footer>🃏 Poker Trainer — Free, open source, hosted on GitHub Pages</footer>
+
+<script>
+// ============================================================
+//  UTILITIES & CARD SYSTEM
+// ============================================================
+const SUITS = ['♠','♥','♦','♣'];
+const RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+const RED_SUITS = new Set(['♥','♦']);
+
+function cardColor(suit){ return RED_SUITS.has(suit) ? 'red' : 'black'; }
+
+function allCards(){
+  const cards = [];
+  for(const suit of SUITS) for(const rank of RANKS) cards.push({rank,suit});
+  return cards;
+}
+
+// ============================================================
+//  HAND EVALUATOR
+// ============================================================
+let holeCards = [];
+let communityCards = [];
+
+function buildCardPicker(){
+  const container = document.getElementById('card-picker');
+  container.innerHTML = '';
+  for(const suit of SUITS){
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px';
+    for(const rank of RANKS){
+      const el = document.createElement('div');
+      el.className = 'playing-card ' + cardColor(suit);
+      el.innerHTML = `<span class="rank">${rank}</span><span class="suit">${suit}</span>`;
+      el.dataset.rank = rank;
+      el.dataset.suit = suit;
+      el.onclick = () => selectCard(rank, suit, el);
+      row.appendChild(el);
+    }
+    container.appendChild(row);
+  }
+}
+
+function isCardSelected(rank,suit,arr){ return arr.some(c=>c.rank===rank&&c.suit===suit); }
+function cardKey(r,s){ return r+s; }
+
+function selectCard(rank, suit, el){
+  if(isCardSelected(rank,suit,holeCards)||isCardSelected(rank,suit,communityCards)){
+    // Deselect
+    holeCards = holeCards.filter(c=>!(c.rank===rank&&c.suit===suit));
+    communityCards = communityCards.filter(c=>!(c.rank===rank&&c.suit===suit));
+    el.classList.remove('selected');
+    refreshDisplays();
+    return;
+  }
+  if(holeCards.length < 2){
+    holeCards.push({rank,suit});
+    el.classList.add('selected');
+  } else if(communityCards.length < 5){
+    communityCards.push({rank,suit});
+    el.classList.add('selected');
+  } else {
+    document.getElementById('eval-result').textContent = 'Max 7 cards selected (2 hole + 5 community).';
+  }
+  refreshDisplays();
+}
+
+function refreshDisplays(){
+  renderMiniCards('hole-display', holeCards);
+  renderMiniCards('community-display', communityCards);
+}
+
+function renderMiniCards(id, cards){
+  const el = document.getElementById(id);
+  if(!cards.length){ el.innerHTML='<span style="color:#4caf50;font-size:.85rem">None selected</span>'; return; }
+  el.innerHTML = cards.map(c=>`<span class="mini-card ${cardColor(c.suit)}" onclick="removeCard('${c.rank}','${c.suit}')">${c.rank}${c.suit} ✕</span>`).join('');
+}
+
+function removeCard(rank, suit){
+  holeCards = holeCards.filter(c=>!(c.rank===rank&&c.suit===suit));
+  communityCards = communityCards.filter(c=>!(c.rank===rank&&c.suit===suit));
+  // remove selected class from picker
+  document.querySelectorAll('.playing-card').forEach(el=>{
+    if(el.dataset.rank===rank && el.dataset.suit===suit) el.classList.remove('selected');
+  });
+  refreshDisplays();
+}
+
+function clearEval(){
+  holeCards=[]; communityCards=[];
+  document.querySelectorAll('.playing-card.selected').forEach(e=>e.classList.remove('selected'));
+  refreshDisplays();
+  document.getElementById('eval-result').textContent='Select cards above to evaluate your hand.';
+}
+
+// ---- Hand Evaluation Logic ----
+const RANK_VAL = {'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13,'A':14};
+
+function rankVal(r){ return RANK_VAL[r]; }
+
+function evaluateHand(){
+  const all = [...holeCards, ...communityCards];
+  if(all.length < 2){ document.getElementById('eval-result').textContent='Please select at least 2 cards.'; return; }
+  if(all.length < 5){
+    const best = bestHandName(all);
+    document.getElementById('eval-result').innerHTML = `<span style="color:#ffd54f">With ${all.length} cards: <strong>${best.name}</strong></span><br><small style="color:#81c784">${best.desc}</small>`;
+    return;
+  }
+  // Get all 5-card combos and find best
+  const combos = choose5(all);
+  let bestScore = -1, bestCombo = null, bestResult = null;
+  for(const combo of combos){
+    const res = scoreHand(combo);
+    if(res.score > bestScore){ bestScore = res.score; bestCombo = combo; bestResult = res; }
+  }
+  document.getElementById('eval-result').innerHTML =
+    `<span style="color:#ffd54f;font-size:1.3rem">${bestResult.name}</span><br>
+     <span style="color:#a5d6a7;font-size:.9rem">${bestCombo.map(c=>c.rank+c.suit).join(' ')}</span><br>
+     <small style="color:#81c784">${bestResult.desc}</small>`;
+}
+
+function choose5(cards){
+  const result = [];
+  function pick(start,chosen){
+    if(chosen.length===5){ result.push([...chosen]); return; }
+    for(let i=start;i<cards.length;i++){
+      chosen.push(cards[i]);
+      pick(i+1,chosen);
+      chosen.pop();
+    }
+  }
+  pick(0,[]);
+  return result;
+}
+
+function scoreHand(cards){
+  const ranks = cards.map(c=>rankVal(c.rank)).sort((a,b)=>b-a);
+  const suits = cards.map(c=>c.suit);
+  const isFlush = new Set(suits).size===1;
+  const isStraight = checkStraight(ranks);
+  const counts = {};
+  ranks.forEach(r=>counts[r]=(counts[r]||0)+1);
+  const countVals = Object.values(counts).sort((a,b)=>b-a);
+  const topRank = ranks[0];
+
+  if(isFlush && isStraight && topRank===14 && ranks[1]===13)
+    return {score:90000,name:'Royal Flush',desc:'A K Q J 10 of the same suit — the best hand possible!'};
+  if(isFlush && isStraight)
+    return {score:80000+topRank,name:'Straight Flush',desc:`Five consecutive cards of the same suit, high card ${cards.find(c=>rankVal(c.rank)===topRank).rank}.`};
+  if(countVals[0]===4){
+    const quad = +Object.keys(counts).find(k=>counts[k]===4);
+    return {score:70000+quad,name:'Four of a Kind',desc:`Four ${RANKS[quad-2] || quad}s.`};
+  }
+  if(countVals[0]===3 && countVals[1]===2){
+    const trip = +Object.keys(counts).find(k=>counts[k]===3);
+    return {score:60000+trip,name:'Full House',desc:`Three ${RANKS[trip-2] || trip}s over a pair.`};
+  }
+  if(isFlush)
+    return {score:50000+topRank,name:'Flush',desc:`Five ${suits[0]} cards.`};
+  if(isStraight)
+    return {score:40000+topRank,name:'Straight',desc:`Five consecutive ranks, high card ${cards.find(c=>rankVal(c.rank)===topRank).rank}.`};
+  if(countVals[0]===3){
+    const trip = +Object.keys(counts).find(k=>counts[k]===3);
+    return {score:30000+trip,name:'Three of a Kind',desc:`Three ${RANKS[trip-2]||trip}s.`};
+  }
+  if(countVals[0]===2 && countVals[1]===2){
+    const pairs = Object.keys(counts).filter(k=>counts[k]===2).map(Number).sort((a,b)=>b-a);
+    return {score:20000+pairs[0]*100+pairs[1],name:'Two Pair',desc:`Pair of ${pairs[0]}s and pair of ${pairs[1]}s.`};
+  }
+  if(countVals[0]===2){
+    const pair = +Object.keys(counts).find(k=>counts[k]===2);
+    return {score:10000+pair,name:'One Pair',desc:`A pair of ${RANKS[pair-2]||pair}s.`};
+  }
+  return {score:topRank,name:'High Card',desc:`Highest card: ${cards.find(c=>rankVal(c.rank)===topRank).rank}.`};
+}
+
+function checkStraight(sortedRanks){
+  // Normal
+  if(sortedRanks[0]-sortedRanks[4]===4 && new Set(sortedRanks).size===5) return true;
+  // Wheel A-2-3-4-5
+  if(sortedRanks[0]===14){
+    const low=[5,4,3,2,1];
+    const r2=sortedRanks.slice(1);
+    if(r2[0]===5&&r2[1]===4&&r2[2]===3&&r2[3]===2) return true;
+  }
+  return false;
+}
+
+function bestHandName(cards){
+  if(cards.length===1) return {name:'High Card',desc:`Your high card is ${cards[0].rank}.`};
+  return scoreHand(cards.length>=5 ? cards.slice(0,5) : [...cards,...Array(5-cards.length).fill({rank:'2',suit:'♠'})]);
+}
+
+// ============================================================
+//  POT ODDS CALCULATOR
+// ============================================================
+function calcPotOdds(){
+  const pot = parseFloat(document.getElementById('pot-size').value)||0;
+  const bet = parseFloat(document.getElementById('bet-call').value)||0;
+  const outs = parseInt(document.getElementById('outs').value)||0;
+  const ctc = parseInt(document.getElementById('cards-to-come').value);
+  const el = document.getElementById('pot-odds-result');
+
+  if(bet<=0){ el.innerHTML='<span class="odds-bad">Enter a valid bet amount.</span>'; return; }
+
+  const potAfterCall = pot + bet;
+  const potOdds = bet / potAfterCall * 100;
+
+  const remainingCards = 52 - 2 - 3; // approx after flop
+  let equity;
+  if(ctc===2) equity = (1 - ((remainingCards-outs)/remainingCards) * ((remainingCards-1-outs)/(remainingCards-1))) * 100;
+  else equity = (outs / (52-2-3-(ctc===1?1:0))) * 100;
+
+  const good = equity > potOdds;
+  el.innerHTML = `
+    <div>Pot odds: you need <strong>${potOdds.toFixed(1)}%</strong> equity to break even.</div>
+    <div>Your estimated equity: <strong>${equity.toFixed(1)}%</strong> with ${outs} outs.</div>
+    <div style="margin-top:8px;font-size:1.1rem" class="${good?'odds-good':'odds-bad'}">
+      ${good ? '✅ CALL — you have the odds!' : '❌ FOLD — not enough equity for this bet.'}
+    </div>
+    <div style="margin-top:6px;font-size:.82rem;color:#81c784">
+      Rule of ${ctc===2?'4':'2'}: ${outs}×${ctc===2?4:2} = ~${outs*(ctc===2?4:2)}% equity
+    </div>
+  `;
+}
+</script>
+<script>
+// ============================================================
+//  POSITIONS
+// ============================================================
+const POSITIONS = [
+  {id:'BTN',label:'BTN',color:'#f9a825',angle:0,
+   info:'<strong>Button (BTN)</strong> — Best position in poker. Last to act post-flop. Play wide: ~28% of hands. Steal blinds liberally, 3-bet light, and float in position.'},
+  {id:'CO',label:'CO',color:'#66bb6a',angle:60,
+   info:'<strong>Cut-Off (CO)</strong> — Second best position. Play ~20% of hands. Open raise with a wide range. If BTN folds, you get the best relative position.'},
+  {id:'HJ',label:'HJ',color:'#4fc3f7',angle:120,
+   info:'<strong>Hijack (HJ)</strong> — Good position. Play ~16% of hands. Start opening with medium-strength hands here. Be cautious of CO/BTN isolating.'},
+  {id:'UTG+1',label:'UTG+1',color:'#ce93d8',angle:180,
+   info:'<strong>UTG+1</strong> — Early-middle position. Play tight ~13% of hands. Raise with strong hands, fold marginal holdings.'},
+  {id:'UTG',label:'UTG',color:'#ef9a9a',angle:240,
+   info:'<strong>Under the Gun (UTG)</strong> — Worst position, first to act pre-flop. Play only ~10% of hands: premium pairs, big aces, strong broadways. Fold speculative hands.'},
+  {id:'BB',label:'BB',color:'#ffcc80',angle:300,
+   info:'<strong>Big Blind (BB)</strong> — Forced bet. Defend wide vs steals (you already have money in). Play 15-25% of hands vs raises. Post-flop you act first (disadvantage).'},
+  {id:'SB',label:'SB',color:'#a5d6a7',angle:-30,
+   info:'<strong>Small Blind (SB)</strong> — Forced bet, second-worst position. Always out of position post-flop. Defend tighter than BB. 3-bet or fold is often best strategy.'},
+];
+
+function buildPokerTable(){
+  const tbl = document.getElementById('poker-table');
+  tbl.innerHTML = '<div style="color:#a5d6a7;font-size:.75rem;text-align:center;position:absolute">DEALER<br>BUTTON ◀</div>';
+  const W=420,H=230,CX=W/2,CY=H/2,RX=160,RY=90;
+  POSITIONS.forEach(pos=>{
+    const rad = (pos.angle-90)*Math.PI/180;
+    const x = CX + RX*Math.cos(rad);
+    const y = CY + RY*Math.sin(rad);
+    const seat = document.createElement('div');
+    seat.className='pos-seat';
+    seat.style.cssText=`left:${x}px;top:${y}px;transform:translate(-50%,-50%)`;
+    const dot = document.createElement('div');
+    dot.className='pos-dot';
+    dot.style.background=pos.color;
+    dot.style.color='#1a1a1a';
+    dot.textContent=pos.label;
+    dot.onclick=()=>showPosInfo(pos,dot);
+    const lbl = document.createElement('div');
+    lbl.className='pos-lbl';
+    lbl.textContent=pos.label;
+    seat.appendChild(dot);
+    tbl.appendChild(seat);
+  });
+}
+
+function showPosInfo(pos, dotEl){
+  document.querySelectorAll('.pos-dot').forEach(d=>d.classList.remove('active'));
+  dotEl.classList.add('active');
+  document.getElementById('pos-info').innerHTML=`
+    <div>${pos.info}</div>
+    <div style="margin-top:12px;padding:10px;background:#1b3a22;border-radius:6px">
+      <strong style="color:#ffd54f">Quick Tips:</strong>
+      ${pos.id==='BTN' ? '<ul style="margin-left:18px;margin-top:6px;line-height:2"><li>3-bet or fold vs re-raises from blinds</li><li>Steal with any two in unraised pot</li><li>Float in position with backdoor draws</li></ul>' :
+        pos.id==='BB' ? '<ul style="margin-left:18px;margin-top:6px;line-height:2"><li>Defend against steals with suited connectors</li><li>Check-raise more on wet boards</li><li>You can trap since you have range advantage</li></ul>' :
+        pos.id==='SB' ? '<ul style="margin-left:18px;margin-top:6px;line-height:2"><li>Prefer 3-bet or fold strategy</li><li>Avoid cold-calling with marginal hands</li><li>Complete only with very strong holdings</li></ul>' :
+        pos.id==='UTG' ? '<ul style="margin-left:18px;margin-top:6px;line-height:2"><li>Raise AA/KK/QQ/AKs/AKo/JJ/AQs</li><li>Fold everything else unless very deep</li><li>Represent a strong range always</li></ul>' :
+        '<ul style="margin-left:18px;margin-top:6px;line-height:2"><li>Open-raise your top hands</li><li>3-bet value hands vs early raisers</li><li>Position improves as you move left</li></ul>'
+      }
+    </div>`;
+}
+
+// ============================================================
+//  STARTING HAND RANGES
+// ============================================================
+const HAND_RANKS_13 = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+let selectedRange = new Set();
+
+const TIGHT_RANGE = new Set(['AA','KK','QQ','JJ','TT','99','88','AKs','AQs','AJs','ATs','KQs','AKo','AQo']);
+const MEDIUM_RANGE = new Set([...TIGHT_RANGE,'77','66','A9s','A8s','KJs','KTs','QJs','JTs','T9s','AJo','ATo','KQo']);
+const LOOSE_RANGE = new Set([...MEDIUM_RANGE,'55','44','33','22','A7s','A6s','A5s','A4s','A3s','A2s','K9s','Q9s','J9s','T8s','98s','87s','76s','65s','54s','KJo','KTo','QJo','JTo']);
+
+function buildRangeGrid(){
+  const grid = document.getElementById('range-grid');
+  grid.innerHTML='';
+  for(let i=0;i<13;i++){
+    for(let j=0;j<13;j++){
+      const r1=HAND_RANKS_13[i], r2=HAND_RANKS_13[j];
+      let handKey, type;
+      if(i===j){ handKey=r1+r2; type='pair'; }
+      else if(i<j){ handKey=r1+r2+'s'; type='suited'; }
+      else { handKey=r2+r1+'o'; type='offsuit'; }
+      const cell = document.createElement('div');
+      cell.className='range-cell '+type;
+      cell.textContent=handKey.replace('s','').replace('o','')+(type==='pair'?'':(type==='suited'?'s':'o'));
+      cell.title=handKey;
+      cell.dataset.hand=handKey;
+      if(selectedRange.has(handKey)) cell.classList.add('selected-range');
+      cell.onclick=()=>toggleRangeCell(cell,handKey);
+      grid.appendChild(cell);
+    }
+  }
+  updateRangeCount();
+}
+
+function toggleRangeCell(cell, hand){
+  if(selectedRange.has(hand)){selectedRange.delete(hand);cell.classList.remove('selected-range');}
+  else{selectedRange.add(hand);cell.classList.add('selected-range');}
+  updateRangeCount();
+}
+
+function setPreset(type){
+  const map={tight:TIGHT_RANGE,medium:MEDIUM_RANGE,loose:LOOSE_RANGE};
+  selectedRange=new Set(map[type]);
+  buildRangeGrid();
+}
+
+function clearRange(){ selectedRange=new Set(); buildRangeGrid(); }
+function updateRangeCount(){ document.getElementById('range-count').textContent=selectedRange.size+' hands selected (click cells to toggle)'; }
+</script>
+<script>
+// ============================================================
+//  QUIZ
+// ============================================================
+let quizStats = JSON.parse(localStorage.getItem('pokerQuizStats')||'{"correct":0,"total":0}');
+let currentQ = null;
+let answered = false;
+
+const QUIZ_QUESTIONS = [
+  {q:'You have A♠K♠. The flop comes Q♠J♠2♥. How many outs do you have for the nut flush?',
+   scenario:'Hole: A♠ K♠ | Flop: Q♠ J♠ 2♥',
+   options:['7 outs','9 outs','11 outs','13 outs'],
+   answer:1,
+   explain:'You have 9 remaining spades in the deck for the nut flush draw (13 spades − 4 on board/hand = 9).'},
+  {q:'What is the best starting hand in Texas Hold'em?',
+   scenario:'Pre-flop starting hands',
+   options:['K♥K♠ (Cowboys)','A♠A♥ (Pocket Rockets)','A♠K♠ (Big Slick Suited)','Q♥Q♣ (Ladies)'],
+   answer:1,
+   explain:'Pocket Aces (A♠A♥) is the best pre-flop hand in Texas Hold'em, winning ~85% vs any other hand heads-up.'},
+  {q:'You are on the Button. The pot is $60 and your opponent bets $20. Should you call with a flush draw (9 outs, 1 card to come)?',
+   scenario:'Pot: $60 | Bet: $20 | Flush draw (9 outs) | River only',
+   options:['No — pot odds do not justify calling','Yes — you have the right pot odds','Always fold draws on the river','Raise instead'],
+   answer:1,
+   explain:'Pot odds: $20 to win $80 = 25% needed. Your equity with 9 outs × 2 = ~18%. Actually this is a CLOSE call — but with implied odds on the button, a call is fine. Pot odds alone: 25% needed vs ~18% equity = slight fold, but position and implied odds make it a call.'},
+  {q:'What hand beats a flush?',
+   scenario:'Hand rankings',
+   options:['Three of a Kind','Straight','Full House','Two Pair'],
+   answer:2,
+   explain:'A Full House (three of a kind + a pair) beats a flush. The ranking order is: Straight < Flush < Full House < Four of a Kind.'},
+  {q:'You have 7♦8♦ and the board is 5♣6♥K♠. How many outs do you have for an open-ended straight draw?',
+   scenario:'Hole: 7♦ 8♦ | Board: 5♣ 6♥ K♠',
+   options:['4 outs (only 4s)','8 outs (four 4s + four 9s)','6 outs','12 outs'],
+   answer:1,
+   explain:'An open-ended straight draw has 8 outs: four 4s (to make 4-5-6-7-8) and four 9s (to make 5-6-7-8-9).'},
+  {q:'What is "position" in poker and why does it matter?',
+   scenario:'Positional advantage',
+   options:['Where you sit physically at the table','Acting after your opponents, giving you more information','The size of your chip stack','The order in which cards are dealt'],
+   answer:1,
+   explain:'Position means acting after your opponents post-flop. This is a huge advantage because you see their actions before making your decision, giving you more information to make better choices.'},
+  {q:'The pot is $100. Your opponent goes all-in for $100. You have a gutshot straight draw (4 outs). Should you call?',
+   scenario:'Pot: $100 | Bet: $100 | Gutshot (4 outs) | 1 card to come',
+   options:['Yes, always chase draws','No — pot odds do not justify it','Only call if suited','Yes if in position'],
+   answer:1,
+   explain:'You need to call $100 to win $200 total = 50% pot odds needed. With 4 outs × 2 = ~8% equity. This is a clear fold unless you have massive implied odds.'},
+  {q:'What does "3-betting" mean?',
+   scenario:'Pre-flop aggression',
+   options:['Betting three times the big blind','Making the third raise in a betting sequence','Calling three raises in a row','Folding after three bets'],
+   answer:1,
+   explain:'A 3-bet is the third bet in a sequence: BB posts (1-bet), player raises (2-bet), another player re-raises (3-bet). 3-betting is a powerful aggressive move.'},
+  {q:'Which hand is stronger: J♠J♥J♦2♣2♠ (full house) or A♥K♥Q♥J♥T♥ (royal flush)?',
+   scenario:'Hand comparison',
+   options:['Full House — three of a kind is strong','Royal Flush — highest possible hand','They are equal','Depends on the kicker'],
+   answer:1,
+   explain:'A Royal Flush (A-K-Q-J-T of the same suit) is the best hand in poker, beating all other hands including full houses, four of a kind, etc.'},
+  {q:'You are Under the Gun (UTG) at a 9-handed table. Which hand should you FOLD?',
+   scenario:'UTG 9-handed, pre-flop',
+   options:['A♠A♥','K♥K♣','7♣8♣ (suited connector)','A♦K♦'],
+   answer:2,
+   explain:'Suited connectors like 7♣8♣ play poorly from UTG. You are out of position against 8 other players and your hand rarely makes the nuts. Play tight from early position.'},
+  {q:'What is "the Rule of 4 and 2"?',
+   scenario:'Estimating equity',
+   options:['Bet 4x pre-flop and 2x post-flop','Multiply your outs by 4 (two cards to come) or 2 (one card) for equity %','Four suits times two colors','Raise 4x or fold, never call'],
+   answer:1,
+   explain:'The Rule of 4 and 2 is a quick mental math shortcut: multiply outs × 4 when two cards remain (flop) or × 2 when one card remains (turn) to estimate your equity percentage.'},
+  {q:'A straight flush is beaten by which hand?',
+   scenario:'Hand rankings',
+   options:['Four of a Kind','Royal Flush','Any Flush','Full House'],
+   answer:1,
+   explain:'A Royal Flush (specifically A-K-Q-J-T suited) beats a straight flush. A Royal Flush is technically the highest straight flush possible.'},
+];
+
+function getRandomQuestion(){
+  const idx = Math.floor(Math.random()*QUIZ_QUESTIONS.length);
+  return QUIZ_QUESTIONS[idx];
+}
+
+function loadQuestion(q){
+  currentQ = q;
+  answered = false;
+  document.getElementById('quiz-scenario').innerHTML =
+    `<div style="font-size:1rem;margin-bottom:10px;color:#ffd54f;font-weight:600">${q.q}</div>
+     <div style="background:#0d2b14;border-radius:6px;padding:10px;font-size:.9rem;color:#a5d6a7;margin-bottom:4px">
+       <strong>Scenario:</strong> ${q.scenario}
+     </div>`;
+  const optEl = document.getElementById('quiz-options');
+  optEl.innerHTML = q.options.map((opt,i)=>
+    `<button class="quiz-option" onclick="answerQuiz(${i},this)">${opt}</button>`
+  ).join('');
+  const fb = document.getElementById('quiz-feedback');
+  fb.style.display='none';
+  fb.innerHTML='';
+}
+
+function answerQuiz(idx, btn){
+  if(answered) return;
+  answered = true;
+  quizStats.total++;
+  const correct = idx === currentQ.answer;
+  if(correct){ quizStats.correct++; btn.classList.add('correct'); }
+  else{
+    btn.classList.add('wrong');
+    document.querySelectorAll('.quiz-option')[currentQ.answer].classList.add('correct');
+  }
+  const fb = document.getElementById('quiz-feedback');
+  fb.style.display='block';
+  fb.className='feedback '+(correct?'good':'bad');
+  fb.innerHTML=(correct?'✅ Correct! ':'❌ Wrong. ')+currentQ.explain;
+  localStorage.setItem('pokerQuizStats',JSON.stringify(quizStats));
+  updateStats();
+}
+
+function nextQuestion(){ loadQuestion(getRandomQuestion()); }
+
+function updateStats(){
+  document.getElementById('stat-correct').textContent=quizStats.correct;
+  document.getElementById('stat-total').textContent=quizStats.total;
+  const pct = quizStats.total>0 ? Math.round(quizStats.correct/quizStats.total*100) : 0;
+  document.getElementById('stat-pct').textContent=pct+'%';
+  document.getElementById('stat-bar').style.width=pct+'%';
+}
+
+function resetStats(){
+  quizStats={correct:0,total:0};
+  localStorage.setItem('pokerQuizStats',JSON.stringify(quizStats));
+  updateStats();
+}
+
+// ============================================================
+//  HAND RANKINGS
+// ============================================================
+const HAND_RANKINGS = [
+  {name:'Royal Flush',example:'A♠ K♠ Q♠ J♠ 10♠',suits:['♠','♠','♠','♠','♠'],ranks:['A','K','Q','J','10'],badge:'legendary',desc:'Ace-high straight flush. Unbeatable.'},
+  {name:'Straight Flush',example:'9♥ 8♥ 7♥ 6♥ 5♥',badge:'legendary',desc:'Five consecutive cards of the same suit.'},
+  {name:'Four of a Kind',example:'K♠ K♥ K♦ K♣ A♠',badge:'rare',desc:'Four cards of the same rank.'},
+  {name:'Full House',example:'J♠ J♥ J♦ 8♣ 8♠',badge:'rare',desc:'Three of a kind plus a pair.'},
+  {name:'Flush',example:'A♦ J♦ 9♦ 5♦ 2♦',badge:'uncommon',desc:'Five cards of the same suit.'},
+  {name:'Straight',example:'7♠ 6♥ 5♦ 4♣ 3♠',badge:'uncommon',desc:'Five consecutive ranked cards.'},
+  {name:'Three of a Kind',example:'Q♠ Q♥ Q♦ 7♣ 2♠',badge:'uncommon',desc:'Three cards of the same rank.'},
+  {name:'Two Pair',example:'A♠ A♥ K♦ K♣ 5♠',badge:'common',desc:'Two different pairs.'},
+  {name:'One Pair',example:'T♠ T♥ A♦ 7♣ 3♠',badge:'common',desc:'Two cards of the same rank.'},
+  {name:'High Card',example:'A♠ Q♥ 9♦ 6♣ 2♠',badge:'common',desc:'No combination — highest card plays.'},
+];
+
+function buildHandRankings(){
+  const list = document.getElementById('hand-rankings');
+  list.innerHTML = HAND_RANKINGS.map(h=>`
+    <li>
+      <div style="flex:1">
+        <div style="font-weight:700;color:#ffd54f">${h.name}</div>
+        <div style="font-size:.85rem;color:#a5d6a7">${h.desc}</div>
+        <div style="font-size:.88rem;color:#e8f5e9;margin-top:3px">${h.example}</div>
+      </div>
+      <span class="badge ${h.badge}">${h.badge.toUpperCase()}</span>
+    </li>`).join('');
+}
+
+// ============================================================
+//  TAB NAVIGATION
+// ============================================================
+function showTab(id, btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+buildCardPicker();
+buildPokerTable();
+buildRangeGrid();
+buildHandRankings();
+loadQuestion(getRandomQuestion());
+updateStats();
+</script>
+</body>
+</html>
